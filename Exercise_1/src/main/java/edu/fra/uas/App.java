@@ -7,7 +7,7 @@ public class App {
     private static final Map<Long, Integer> memory = new HashMap<>();
 
     public static void main(String[] args) {
-        int limit = 10;
+        int limit = 1000000;
         int maxSteps = 0;
         int numberWithMaxSteps = 1;
 
