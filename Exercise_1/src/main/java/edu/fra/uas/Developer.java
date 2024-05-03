@@ -26,6 +26,7 @@ public class Developer {
     }
 
     public void setName(String name) {
+        if (name == null || name.isEmpty()) throw new RuntimeException("name must not be null or empty");
         this.name = name;
     }
 
@@ -34,6 +35,7 @@ public class Developer {
     }
 
     public void setAge(int age) {
+        if (age <= 0) throw new RuntimeException("Age must be greater than zero");
         this.age = age;
     }
 
@@ -42,6 +44,8 @@ public class Developer {
     }
 
     public void setProgrammingLanguage(String programmingLanguage) {
+        if (programmingLanguage == null || programmingLanguage.isEmpty())
+            throw new RuntimeException(", programmingLanguage must not be null or empty");
         this.programmingLanguage = programmingLanguage;
     }
 
@@ -58,6 +62,7 @@ public class Developer {
     }
 
     public void setYearsOfExperience(int yearsOfExperience) {
+        if (yearsOfExperience < 0) throw new RuntimeException("yearsOfExperience must be positive");
         this.yearsOfExperience = yearsOfExperience;
     }
 
@@ -127,8 +132,8 @@ public class Developer {
         }
     }
 
-    public static void main(String[] args){
-        Developer developer = new Developer("Test", 19,"JAVA", false, 7);
+    public static void main(String[] args) {
+        Developer developer = new Developer("Test", 19, "JAVA", false, 7);
         developer.code();
         developer.debug();
         developer.deploy();
