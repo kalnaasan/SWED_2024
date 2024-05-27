@@ -35,7 +35,7 @@ public class Developer {
     }
 
     public void setAge(int age) {
-        if (age <= 0) throw new RuntimeException("Age must be greater than zero");
+        if (age <= 0 || age > 150) throw new RuntimeException("Age must be greater than zero or smaller than 150");
         this.age = age;
     }
 
