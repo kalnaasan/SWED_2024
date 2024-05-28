@@ -59,17 +59,16 @@ public class VersionService {
     /**
      * Updates an existing version.
      *
-     * @param id          the ID of the version to be updated
      * @param versionDetails the new details for the version
      * @return the updated version
      * @throws ResourceNotFoundException if no version was found with the given ID
      */
-    public Version updateVersion(Long id, Version versionDetails) {
-        return versionRepository.findById(id).map(version -> {
+    public Version updateVersion(Version versionDetails) {
+        return versionRepository.findById(versionDetails.getId()).map(version -> {
             version.setContent(versionDetails.getContent());
             version.setCreatedAt(versionDetails.getCreatedAt());
             return versionRepository.save(version);
-        }).orElseThrow(() -> new ResourceNotFoundException("Version not found with id " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Version not found with id " + versionDetails.getId()));
     }
 
     /**

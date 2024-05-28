@@ -59,19 +59,18 @@ public class UserService {
     /**
      * Updates an existing user.
      *
-     * @param id          the ID of the user to be updated
      * @param userDetails the new details for the user
      * @return the updated user
      * @throws ResourceNotFoundException if no user was found with the given ID
      */
-    public User updateUser(Long id, User userDetails) {
-        return userRepository.findById(id).map(user -> {
+    public User updateUser(User userDetails) {
+        return userRepository.findById(userDetails.getId()).map(user -> {
             user.setFirstname(userDetails.getFirstname());
             user.setLastname(userDetails.getLastname());
             user.setEmail(userDetails.getEmail());
             user.setPhone(userDetails.getPhone());
             return userRepository.save(user);
-        }).orElseThrow(() -> new ResourceNotFoundException("User not found with id " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("User not found with id " + userDetails.getId()));
     }
 
     /**

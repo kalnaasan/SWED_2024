@@ -69,19 +69,18 @@ public class SubscriptionService {
     /**
      * Updates an existing subscription.
      *
-     * @param id                  the ID of the subscription to be updated
      * @param subscriptionDetails the new details for the subscription
      * @return the updated subscription
      * @throws ResourceNotFoundException if no subscription was found with the given ID
      */
-    public Subscription updateSubscription(Long id, Subscription subscriptionDetails) {
-        return this.subscriptionRepository.findById(id).map(subscription -> {
+    public Subscription updateSubscription(Subscription subscriptionDetails) {
+        return this.subscriptionRepository.findById(subscriptionDetails.getId()).map(subscription -> {
             subscription.setWebsiteName(subscriptionDetails.getWebsiteName());
             subscription.setUrl(subscriptionDetails.getUrl());
             subscription.setFrequency(subscriptionDetails.getFrequency());
             subscription.setCommunicationChannel(subscriptionDetails.getCommunicationChannel());
             return this.subscriptionRepository.save(subscription);
-        }).orElseThrow(() -> new ResourceNotFoundException("Subscription not found with id " + id));
+        }).orElseThrow(() -> new ResourceNotFoundException("Subscription not found with id " + subscriptionDetails.getId()));
     }
 
     /**

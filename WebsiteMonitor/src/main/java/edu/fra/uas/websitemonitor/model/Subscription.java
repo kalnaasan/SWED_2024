@@ -35,7 +35,7 @@ public class Subscription {
     private Frequency frequency;
     private CommunicationChannel communicationChannel;
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
     @OneToMany(mappedBy = "subscription")
     private Set<Version> versions = new HashSet<>();
