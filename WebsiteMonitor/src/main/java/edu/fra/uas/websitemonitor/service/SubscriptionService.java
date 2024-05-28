@@ -98,7 +98,7 @@ public class SubscriptionService {
         this.subscriptionRepository.getAllIDs().forEach(subscriptionId -> {
             try {
                 Boolean compare = this.fetchAndCompareWebsiteContent(subscriptionId);
-                if (!compare) emailNotification.sendNotification(getSubscriptionById(subscriptionId).get());
+                if (compare) emailNotification.sendNotification(getSubscriptionById(subscriptionId).get());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -108,7 +108,6 @@ public class SubscriptionService {
     public Boolean fetchAndCompareWebsiteContent(Long subscriptionId) throws IOException {
         // Find the subscription by ID
         Optional<Subscription> optionalSubscription = this.subscriptionRepository.findById(subscriptionId);
-
         // Check if the subscription is present
         if (optionalSubscription.isEmpty()) {
             // If the subscription is not found, return false
@@ -121,6 +120,8 @@ public class SubscriptionService {
         Frequency frequency = subscription.getFrequency();
         // Get the current time
         LocalDateTime now = LocalDateTime.now();
+
+        log.info("Subscription: {} , Frequency: {}", subscription.getWebsiteName(), frequency.toString());
 
         // Fetch the most recent version of the content for this subscription
         List<Version> recentVersions = this.versionRepository.findTop2BySubscription_IdOrderByCreatedAtDesc(subscriptionId);
@@ -157,7 +158,7 @@ public class SubscriptionService {
         Version version2 = recentVersions.get(1);
 
         // Compare the content of the two most recent versions
-        return version1.getContent().equals(version2.getContent());
+        return !version1.getContent().equals(version2.getContent());
     }
 
     /**
