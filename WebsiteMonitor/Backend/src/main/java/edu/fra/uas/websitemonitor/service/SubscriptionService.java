@@ -96,7 +96,7 @@ public class SubscriptionService {
         this.subscriptionRepository.deleteById(id);
     }
 
-    @Scheduled(fixedRate = 5000) // 5000 milliseconds = 5 seconds
+    @Scheduled(fixedRate = 60000) // 5000 milliseconds = 5 seconds
     public void run() {
         log.info("run");
         this.subscriptionRepository.getAllIDs().forEach(subscriptionId -> {
