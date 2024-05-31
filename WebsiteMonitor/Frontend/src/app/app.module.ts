@@ -3,14 +3,22 @@ import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import {HttpClientModule} from "@angular/common/http";
+import { SubscriptionComponent } from './component/subscription/subscription.component';
+import { NavbarComponent } from './component/navbar/navbar.component';
+import { UserComponent } from './component/user/user.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    SubscriptionComponent,
+    NavbarComponent,
+    UserComponent
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    HttpClientModule
   ],
   providers: [],
   bootstrap: [AppComponent]
