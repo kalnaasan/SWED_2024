@@ -15,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,6 +35,7 @@ public class Subscription {
     private String url;
     private Frequency frequency;
     private CommunicationChannel communicationChannel;
+    private LocalDateTime lastUpdate;
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
