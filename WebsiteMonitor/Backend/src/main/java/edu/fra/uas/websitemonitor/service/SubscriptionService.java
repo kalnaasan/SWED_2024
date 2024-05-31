@@ -1,6 +1,7 @@
 package edu.fra.uas.websitemonitor.service;
 
 import edu.fra.uas.websitemonitor.exception.ResourceNotFoundException;
+import edu.fra.uas.websitemonitor.model.CommunicationChannel;
 import edu.fra.uas.websitemonitor.model.Frequency;
 import edu.fra.uas.websitemonitor.model.Subscription;
 import edu.fra.uas.websitemonitor.model.Version;
@@ -26,13 +27,16 @@ import java.util.Optional;
 public class SubscriptionService {
 
     @Qualifier("EmailNotification")
-    private final EmailNotification emailNotification;
+    private final Notification emailNotification;
+    @Qualifier("SMSNotification")
+    private final Notification smsNotification;
     private final SubscriptionRepository subscriptionRepository;
     private final VersionRepository versionRepository;
 
     @Autowired
-    public SubscriptionService(EmailNotification emailNotification, SubscriptionRepository subscriptionRepository, VersionRepository versionRepository) {
+    public SubscriptionService(@Qualifier("EmailNotification") Notification emailNotification,@Qualifier("SMSNotification") Notification smsNotification, SubscriptionRepository subscriptionRepository, VersionRepository versionRepository) {
         this.emailNotification = emailNotification;
+        this.smsNotification = smsNotification;
         this.subscriptionRepository = subscriptionRepository;
         this.versionRepository = versionRepository;
     }
@@ -98,7 +102,15 @@ public class SubscriptionService {
         this.subscriptionRepository.getAllIDs().forEach(subscriptionId -> {
             try {
                 Boolean compare = this.fetchAndCompareWebsiteContent(subscriptionId);
-                if (compare) emailNotification.sendNotification(getSubscriptionById(subscriptionId).get());
+                Optional<Subscription> optionalSubscription = this.getSubscriptionById(subscriptionId);
+
+                if (compare && optionalSubscription.isPresent()) {
+                    switch (optionalSubscription.get().getCommunicationChannel()) {
+                        case EMAIL -> this.emailNotification.sendNotification(optionalSubscription.get());
+                        case SMS -> this.smsNotification.sendNotification(optionalSubscription.get());
+                    }
+
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -145,6 +157,8 @@ public class SubscriptionService {
         String content = this.fetchContent(subscription.getUrl());
         // Save the new version of the content
         this.versionRepository.save(new Version(null, content, now, subscription));
+        subscription.setLastUpdate(now);
+        this.subscriptionRepository.save(subscription);
 
         // Check if there are at least two versions to compare
         if (recentVersions.size() < 2) {
