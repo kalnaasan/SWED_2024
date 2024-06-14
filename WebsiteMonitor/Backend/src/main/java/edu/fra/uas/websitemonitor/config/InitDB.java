@@ -30,7 +30,10 @@ public class InitDB {
         log.info("### Start initialization of DB ###");
         User kalnaasan = this.createUser("Kaddour", "Alnaasan", "kaddour@alnaasan.de", "017622930808");
         User mdawoud = this.createUser("Mohammed", "Dawoud", "qaduralnaasan@gmail.com", "0176229308080");
-        Subscription subscriptionWikipedia = this.createSubscription("Wikipedia", "https://de.wikipedia.org/wiki/Wikipedia:Hauptseite", Frequency.MINUTELY, CommunicationChannel.EMAIL, kalnaasan);
+        Subscription subscriptionWikipedia = this.createSubscription("Wikipedia", "https://de.wikipedia.org/wiki/Wikipedia:Hauptseite", Frequency.HOURLY, CommunicationChannel.EMAIL, kalnaasan);
+        Subscription subscriptionSpiegel = this.createSubscription("Der spiegel", "https://www.spiegel.de/", Frequency.HOURLY, CommunicationChannel.EMAIL, kalnaasan);
+        Subscription subscriptionErste = this.createSubscription("Das Erste", "https://www.daserste.de/", Frequency.HOURLY, CommunicationChannel.EMAIL, kalnaasan);
+        Subscription subscriptionZDF = this.createSubscription("ZDF", "https://www.zdf.de/", Frequency.HOURLY, CommunicationChannel.EMAIL, kalnaasan);
         Subscription subscriptionFAZ = this.createSubscription("FAZ", "https://www.faz.net/aktuell/", Frequency.HOURLY, CommunicationChannel.EMAIL, mdawoud);
     }
 
@@ -42,6 +45,6 @@ public class InitDB {
     private Subscription createSubscription(String websiteName, String url, Frequency frequency, CommunicationChannel communicationChannel, User user) {
         return this.subscriptionRepository.findByWebsiteNameAndUrl(websiteName, url)
                 .orElseGet(() -> this.subscriptionRepository.save(
-                        new Subscription(null, websiteName, url, frequency, communicationChannel, user, new HashSet<>())));
+                        new Subscription(null, websiteName, url, frequency, communicationChannel, null, user, new HashSet<>())));
     }
 }
