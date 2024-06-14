@@ -1,7 +1,6 @@
 package edu.fra.uas.websitemonitor.service;
 
 import edu.fra.uas.websitemonitor.exception.ResourceNotFoundException;
-import edu.fra.uas.websitemonitor.model.CommunicationChannel;
 import edu.fra.uas.websitemonitor.model.Frequency;
 import edu.fra.uas.websitemonitor.model.Subscription;
 import edu.fra.uas.websitemonitor.model.Version;
@@ -32,13 +31,17 @@ public class SubscriptionService {
     private final Notification smsNotification;
     private final SubscriptionRepository subscriptionRepository;
     private final VersionRepository versionRepository;
+    private final VersionService versionService;
 
     @Autowired
-    public SubscriptionService(@Qualifier("EmailNotification") Notification emailNotification,@Qualifier("SMSNotification") Notification smsNotification, SubscriptionRepository subscriptionRepository, VersionRepository versionRepository) {
+    public SubscriptionService(@Qualifier("EmailNotification") Notification emailNotification,
+                               @Qualifier("SMSNotification") Notification smsNotification,
+                               SubscriptionRepository subscriptionRepository, VersionRepository versionRepository, VersionService versionService) {
         this.emailNotification = emailNotification;
         this.smsNotification = smsNotification;
         this.subscriptionRepository = subscriptionRepository;
         this.versionRepository = versionRepository;
+        this.versionService = versionService;
     }
 
     /**
@@ -96,83 +99,45 @@ public class SubscriptionService {
         this.subscriptionRepository.deleteById(id);
     }
 
-    @Scheduled(fixedRate = 60000) // 5000 milliseconds = 5 seconds
+    @Scheduled(fixedRate = 60000) // 60000 milliseconds = 1 minute
     public void run() {
         log.info("run");
         this.subscriptionRepository.getAllIDs().forEach(subscriptionId -> {
             try {
-                Boolean compare = this.fetchAndCompareWebsiteContent(subscriptionId);
-                Optional<Subscription> optionalSubscription = this.getSubscriptionById(subscriptionId);
-
-                if (compare && optionalSubscription.isPresent()) {
-                    switch (optionalSubscription.get().getCommunicationChannel()) {
-                        case EMAIL -> this.emailNotification.sendNotification(optionalSubscription.get());
-                        case SMS -> this.smsNotification.sendNotification(optionalSubscription.get());
-                    }
-
-                }
+                fetchAndCompareWebsiteContent(subscriptionId);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
     }
 
-    public Boolean fetchAndCompareWebsiteContent(Long subscriptionId) throws IOException {
-        // Find the subscription by ID
+    public void fetchAndCompareWebsiteContent(Long subscriptionId) throws IOException {
         Optional<Subscription> optionalSubscription = this.subscriptionRepository.findById(subscriptionId);
-        // Check if the subscription is present
         if (optionalSubscription.isEmpty()) {
-            // If the subscription is not found, return false
-            return false;
+            throw new ResourceNotFoundException("Subscription not found with id " + subscriptionId);
         }
 
-        // Get the subscription from the Optional
         Subscription subscription = optionalSubscription.get();
-        // Get the frequency of the subscription
         Frequency frequency = subscription.getFrequency();
-        // Get the current time
         LocalDateTime now = LocalDateTime.now();
 
         log.info("Subscription: {} , Frequency: {}", subscription.getWebsiteName(), frequency.toString());
 
-        // Fetch the most recent version of the content for this subscription
         List<Version> recentVersions = this.versionRepository.findTop2BySubscription_IdOrderByCreatedAtDesc(subscriptionId);
 
-        // Check if there are any previously saved versions
         if (!recentVersions.isEmpty()) {
-            // Get the most recent version
             Version lastVersion = recentVersions.get(0);
-            // Get the time when the most recent version was saved
             LocalDateTime lastSavedTime = lastVersion.getCreatedAt();
-            // Calculate the next eligible save time based on the frequency
-            LocalDateTime nextSaveTime = this.calculateNextSaveTime(lastSavedTime, frequency);
+            LocalDateTime nextSaveTime = calculateNextSaveTime(lastSavedTime, frequency);
 
-            // If the current time is before the next eligible save time, return false
             if (now.isBefore(nextSaveTime)) {
-                return false;
+                return;
             }
         }
 
-        // Fetch the content from the URL
         String content = this.fetchContent(subscription.getUrl());
-        // Save the new version of the content
-        this.versionRepository.save(new Version(null, content, now, subscription));
-        subscription.setLastUpdate(now);
-        this.subscriptionRepository.save(subscription);
-
-        // Check if there are at least two versions to compare
-        if (recentVersions.size() < 2) {
-            // If not enough versions, return false
-            return false;
-        }
-
-        // Get the most recent version
-        Version version1 = recentVersions.get(0);
-        // Get the second most recent version
-        Version version2 = recentVersions.get(1);
-
-        // Compare the content of the two most recent versions
-        return !version1.getContent().equals(version2.getContent());
+        Version version = new Version(content, now, subscription);
+        this.versionService.compareWebsiteContent(subscriptionId, version);
     }
 
     /**
