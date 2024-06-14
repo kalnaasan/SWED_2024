@@ -2,7 +2,9 @@ package edu.fra.uas.websitemonitor.service;
 
 import edu.fra.uas.websitemonitor.exception.ResourceNotFoundException;
 import edu.fra.uas.websitemonitor.model.Version;
+import edu.fra.uas.websitemonitor.observer.EmailObserver;
 import edu.fra.uas.websitemonitor.repository.VersionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +16,10 @@ import java.util.Optional;
  * This class provides methods to perform CRUD operations on versions.
  */
 @Service
+@Slf4j
 public class VersionService {
     private final VersionRepository versionRepository;
+    private final EmailObserver emailObserver;
 
     /**
      * Constructor for VersionService.
@@ -23,8 +27,9 @@ public class VersionService {
      * @param versionRepository the VersionRepository to interact with the database
      */
     @Autowired
-    public VersionService(VersionRepository versionRepository) {
+    public VersionService(VersionRepository versionRepository, EmailObserver emailObserver) {
         this.versionRepository = versionRepository;
+        this.emailObserver = emailObserver;
     }
 
     /**
@@ -34,7 +39,8 @@ public class VersionService {
      * @return the created version
      */
     public Version createVersion(Version version) {
-        return versionRepository.save(version);
+        version.attach(emailObserver);
+        return this.versionRepository.save(version);
     }
 
     /**
@@ -44,7 +50,7 @@ public class VersionService {
      * @return an Optional containing the found version, or empty if no version was found
      */
     public Optional<Version> getVersionById(Long id) {
-        return versionRepository.findById(id);
+        return this.versionRepository.findById(id);
     }
 
     /**
@@ -53,7 +59,7 @@ public class VersionService {
      * @return a list of all versions
      */
     public List<Version> getAllVersions() {
-        return versionRepository.findAll();
+        return this.versionRepository.findAll();
     }
 
     /**
@@ -64,10 +70,13 @@ public class VersionService {
      * @throws ResourceNotFoundException if no version was found with the given ID
      */
     public Version updateVersion(Version versionDetails) {
-        return versionRepository.findById(versionDetails.getId()).map(version -> {
+        return this.versionRepository.findById(versionDetails.getId()).map(version -> {
             version.setContent(versionDetails.getContent());
             version.setCreatedAt(versionDetails.getCreatedAt());
-            return versionRepository.save(version);
+            if (isContentChanged(version)) {
+                version.notifyObservers();
+            }
+            return this.versionRepository.save(version);
         }).orElseThrow(() -> new ResourceNotFoundException("Version not found with id " + versionDetails.getId()));
     }
 
@@ -77,6 +86,32 @@ public class VersionService {
      * @param id the ID of the version to be deleted
      */
     public void deleteVersion(Long id) {
-        versionRepository.deleteById(id);
+        this.versionRepository.deleteById(id);
+    }
+
+    public boolean isContentChanged(Version newVersion) {
+        List<Version> recentVersions = this.versionRepository.findTop2BySubscription_IdOrderByCreatedAtDesc(newVersion.getSubscription().getId());
+        if (recentVersions.size() < 2) {
+            return false;
+        }
+        Version lastVersion = recentVersions.get(0);
+        Version secondLastVersion = recentVersions.get(1);
+        return !lastVersion.getContent().equals(secondLastVersion.getContent());
+    }
+
+    public void compareWebsiteContent(Long subscriptionId, Version version) {
+        version = this.createVersion(version);
+
+        List<Version> recentVersions = this.versionRepository.findTop2BySubscription_IdOrderByCreatedAtDesc(subscriptionId);
+
+        if (recentVersions.size() >= 2) {
+            Version lastVersion = recentVersions.get(0);
+            Version secondLastVersion = recentVersions.get(1);
+
+            boolean isContentChanged = !lastVersion.getContent().equals(secondLastVersion.getContent());
+            if (isContentChanged) {
+                version.notifyObservers();
+            }
+        }
     }
 }
