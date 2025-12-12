@@ -1,7 +1,8 @@
 export enum Frequency {
-  NONE,
-  MINUTELY,
-  HOURLY,
-  WEEKLY,
-  MONTHLY
+  NONE = 'NONE',
+  MINUTELY = 'MINUTELY',
+  HOURLY = 'HOURLY',
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY'
 }

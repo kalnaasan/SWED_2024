@@ -10,7 +10,9 @@ import * as bootstrap from "bootstrap";
   styleUrls: ['./user.component.scss']
 })
 export class UserComponent implements OnInit {
+  protected user: User = {id: -1, firstname: '', lastname: '', email: '', phone: ''};
   protected users: User[] = [];
+  protected isUpdate: boolean = false;
 
   constructor(private router: Router,
               private userService: UserService) {
@@ -25,12 +27,27 @@ export class UserComponent implements OnInit {
     });
   }
 
-  updateUser(id: number) {
-    this.router.navigate(['/users/update'], {queryParams: {id: id}}).then(() => {
-    });
+  createUser() {
+    if (!this.isUpdate) {
+      this.userService.createUser(this.user).subscribe({
+        next: (res: any) => this.users.push(res.data),
+        error: (err: any) => console.log(err.error)
+      });
+    }
+  }
+
+  updateUser() {
+    if (this.isUpdate){
+      this.userService.createUser(this.user).subscribe({
+        next: (res: any) => console.log(res.data),
+        error: (err: any) => console.log(err.error)
+      });
+    }
   }
 
   cancelUser(id: number) {
 
   }
+
+  protected readonly UserService = UserService;
 }

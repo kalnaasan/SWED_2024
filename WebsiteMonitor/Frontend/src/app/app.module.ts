@@ -7,6 +7,7 @@ import {HttpClientModule} from "@angular/common/http";
 import { SubscriptionComponent } from './component/subscription/subscription.component';
 import { NavbarComponent } from './component/navbar/navbar.component';
 import { UserComponent } from './component/user/user.component';
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
   declarations: [
@@ -18,7 +19,8 @@ import { UserComponent } from './component/user/user.component';
   imports: [
     BrowserModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

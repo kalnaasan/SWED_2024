@@ -1,8 +1,11 @@
+import {CommunicationChannel} from "./communication-channel";
+import {Frequency} from "./frequency";
+
 export interface Subscription {
   id: number
   websiteName: string
   url: string
-  frequency: number
-  communicationChannel: number
-  lastUpdate: Date
+  frequency: Frequency
+  communicationChannel: CommunicationChannel
+  lastUpdate: any
 }

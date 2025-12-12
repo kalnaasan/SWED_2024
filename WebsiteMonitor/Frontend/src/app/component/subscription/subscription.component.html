@@ -1,6 +1,12 @@
 <div class="container rounded-4 shadow-lg mt-5 bg-white">
   <div class="row">
     <div class="col-12 text-center fw-semibold h2 my-3">Subscriptions</div>
+    <div class="col-12">
+      <button class="btn btn-primary rounded-4 mb-3" data-bs-toggle="modal" data-bs-target="#exampleModal"
+              (click)="isUpdate=false; subscription = {id: -1, websiteName: '', url: '', frequency: Frequency.NONE, communicationChannel: CommunicationChannel.SMS, lastUpdate: null}">
+        Create Subscription
+      </button>
+    </div>
   </div>
   <div class="row" *ngIf="subscriptions.length == 0">
     <div class="col-12 d-flex justify-content-center my-5">
@@ -30,9 +36,12 @@
           <td><a href="{{ item.url }}" target="_blank">{{ item.url }}</a></td>
           <td>{{ item.frequency }}</td>
           <td>{{ item.communicationChannel }}</td>
-          <td>{{ item.lastUpdate | date:'dd.MM.yyyy hh:mm:ss'}}</td>
+          <td>{{ item.lastUpdate | date:'dd.MM.yyyy hh:mm:ss' }}</td>
           <td>
-            <button class="btn rounded-pill btn-primary me-1" (click)="updateSubscription(item.id)">Edit</button>
+            <button class="btn rounded-pill btn-primary me-1" (click)="isUpdate=true; subscription=item"
+                    data-bs-toggle="modal"
+                    data-bs-target="#exampleModal">Edit
+            </button>
             <button class="btn rounded-pill btn-danger" (click)="cancelSubscription(item.id)">Cancel</button>
           </td>
         </tr>
@@ -64,6 +73,65 @@
           </li>
         </ul>
       </nav>-->
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Create User</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3 row">
+          <label for="websiteName" class="col-sm-2 col-form-label">Website Name:</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="websiteName" [(ngModel)]="subscription.websiteName">
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="url" class="col-sm-2 col-form-label">URL</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="url" [(ngModel)]="subscription.url">
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="frequency" class="col-sm-2 col-form-label">Frequency:</label>
+          <div class="col-sm-10">
+            <select class="form-control" id="frequency" [(ngModel)]="subscription.frequency">
+              <option [ngValue]="Frequency.NONE">{{ Frequency.NONE }}</option>
+              <option [ngValue]="Frequency.MINUTELY">{{ Frequency.MINUTELY }}</option>
+              <option [ngValue]="Frequency.HOURLY">{{ Frequency.HOURLY }}</option>
+              <option [ngValue]="Frequency.DAILY">{{ Frequency.DAILY }}</option>
+              <option [ngValue]="Frequency.WEEKLY">{{ Frequency.WEEKLY }}</option>
+              <option [ngValue]="Frequency.MONTHLY">{{ Frequency.MONTHLY }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-3 row">
+          <label for="communicationChannel" class="col-sm-2 col-form-label">Communication Channel:</label>
+          <div class="col-sm-10">
+            <select class="form-control" id="communicationChannel" [(ngModel)]="subscription.communicationChannel">
+              <option [ngValue]="CommunicationChannel.SMS">{{ CommunicationChannel.SMS }}</option>
+              <option [ngValue]="CommunicationChannel.EMAIL">{{ CommunicationChannel.EMAIL }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="updateSubscription()"
+                *ngIf="isUpdate">
+          Save Changes
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="createSubscription()"
+                *ngIf="!isUpdate">
+          Save
+        </button>
+      </div>
     </div>
   </div>
 </div>
