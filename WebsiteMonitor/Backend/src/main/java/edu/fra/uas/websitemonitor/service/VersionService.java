@@ -4,6 +4,8 @@ import edu.fra.uas.websitemonitor.exception.ResourceNotFoundException;
 import edu.fra.uas.websitemonitor.model.Version;
 import edu.fra.uas.websitemonitor.observer.EmailObserver;
 import edu.fra.uas.websitemonitor.repository.VersionRepository;
+import edu.fra.uas.websitemonitor.strategy.Context;
+import edu.fra.uas.websitemonitor.strategy.EStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import java.util.Optional;
 public class VersionService {
     private final VersionRepository versionRepository;
     private final EmailObserver emailObserver;
+    private final Context context;
 
     /**
      * Constructor for VersionService.
@@ -27,9 +30,10 @@ public class VersionService {
      * @param versionRepository the VersionRepository to interact with the database
      */
     @Autowired
-    public VersionService(VersionRepository versionRepository, EmailObserver emailObserver) {
+    public VersionService(VersionRepository versionRepository, EmailObserver emailObserver, Context context) {
         this.versionRepository = versionRepository;
         this.emailObserver = emailObserver;
+        this.context = context;
     }
 
     /**
@@ -96,7 +100,8 @@ public class VersionService {
         }
         Version lastVersion = recentVersions.get(0);
         Version secondLastVersion = recentVersions.get(1);
-        return !lastVersion.getContent().equals(secondLastVersion.getContent());
+
+        return this.context.getStrategy(EStrategy.TEXT).execute(secondLastVersion, lastVersion);
     }
 
     public void compareWebsiteContent(Long subscriptionId, Version version) {
@@ -108,7 +113,7 @@ public class VersionService {
             Version lastVersion = recentVersions.get(0);
             Version secondLastVersion = recentVersions.get(1);
 
-            boolean isContentChanged = !lastVersion.getContent().equals(secondLastVersion.getContent());
+            boolean isContentChanged = this.context.getStrategy(EStrategy.TEXT).execute(secondLastVersion, lastVersion);
             if (isContentChanged) {
                 version.notifyObservers();
             }
